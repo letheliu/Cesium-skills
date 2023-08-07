@@ -90,3 +90,41 @@ This repository can help us to learn all kinds of examples、codes and plugins a
 (3) [A-Zero](http://blog.1ge0.com/gis/cesium/01.html#%E5%B9%B3%E5%8F%B0%E4%BB%8B%E7%BB%8D)
 
 (4）[xietao20](https://blog.csdn.net/xietao20?type=blog)
+
+## 四、Cesium插件js下载地址
+1、[SuperMap-Cesium插件](http://support.supermap.com.cn:8090/webgl/Build/Cesium/Cesium.js)对应代码为混淆后的js文件，如果想要查看源码，可通过浏览器的控制台添加断点调试，在`eval()`函数调用之前打印字符串内容并复制，即为源码版的js，之后利用[在线js格式化工具](https://www.wetools.com/js-formatter)进行格式美化即可阅读，等同于只要想学习，完全可以看到源码哦！！！🌈🌈🌈
+
+<img src="./get-SuperMap-Cesium-source-js.png">
+<center><strong>SuperMap iClient for Cesium</center>
+
+<img src="./online-js-formatter.png">
+<center><strong>SuperMap Cesium 源码格式化</center>
+
+2、[Mars3D插件](http://mars3d.cn/lib/mars3d/mars3d.js)
+<img src="./get-Mars3d-src.png">
+<center><strong>浏览器控制台查看 Mars3D源码格式化</center>
+
+3、[xt3d插件](https://github.com/xt3d/cesium-xt3d/blob/master/dist/xt3d.min.js)
+<img src="./get-xt3d-formatter.png">
+<center><strong>浏览器控制台查看 xt3d源码格式化</center>
+
+4、[EarthSDK插件](http://earthsdk.com/v/last/XbsjEarth/XbsjEarth.js)
+<img src="./get-earthsdk.png">
+<center><strong>浏览器控制台查看 XbsjEarth代码格式化</center>
+
+5、[DC-SDK插件](https://cdn.jsdelivr.net/npm/@dvgis/dc-sdk/dist/dc.min.js)
+<img src="./get-dc_sdk.png">
+<center><strong>浏览器控制台查看 dc-sdk 代码格式化</center>
+
+6、[d3kit插件](https://github.com/zhangti0708/cesium-d3kit/blob/main/examples/libs/cesium-d3kit.js)
+  [Cesium-utils库](http://zhangticcc.gitee.io/city3d/Build/Cesium/Cesium.js)
+<img src="./get-d3kit-Cesium-utils.png">
+<center><strong>浏览器控制台查看 d3kit-utils 代码格式化</center>
+
+7、[DataEarth插件库](https://dataearth.airlook.com/Build/Cesium.js)
+<img src="./get-dataearth.png">
+<center><strong>浏览器控制台查看 DataEarth 代码格式化</center>
+
+8、[Vue-Cesium](https://raw.githubusercontent.com/zouyaoji/vue-cesium/dev/website/public/Cesium/Cesium.js)
+<img src="./get-Vue_Cesium">
+<center><strong>浏览器控制台查看 Vue-Cesium 代码格式化</center>
