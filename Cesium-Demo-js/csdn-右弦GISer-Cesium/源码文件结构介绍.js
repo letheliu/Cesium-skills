@@ -1,0 +1,26 @@
+2.主要文件结构
+①根路径文件
+CHANGES.md：Cesium每个版本的变更记录以及每个版本修复了哪些功能。
+gulpfile.cjs：记录了Cesium的所有打包流程，包括GLSL语法的转义，压缩和未压缩库文件的打包、API文档的生成以及自动化单元测试等。
+index.html：Web导航首页。
+package.json：一个用于包的依赖管理文件，包括包的名称、版本号、描述、官网url、作者、程序的主入口文件、开发环境和生产环境依赖包列表以及执行脚本等。
+README.md：项目的入门手册，介绍了整个项目的使用、功能等。
+server.cjs：Cesium内置的Node服务器文件
+②Apps文件夹
+CesiumViewer：一个简单的Cesium初始化示例。
+SampleData：所有示例代码所用到的数据，包括json、geojson、topojson、kml、czml、gltf、3dtiles以及图片等。
+Sandcastle：存储Cesium的示例程序代码。
+TimelineDemo：时间轴示例代码。
+③Build文件夹
+Cesium：打包后的Cesium库文件（压缩）。
+CesiumUnminified：打包后的Cesium库文件（未压缩），引用该文件可方便开发人员进行调试，找到程序异常或报错的具体代码位置。
+Documentation：打包之后的API文档。
+④Source文件夹
+包括所有类的源码和自定义的shader（渲染），可以通过阅读源码研究每个类、属性、方法及事件的实现原理。
+⑤Specs文件夹
+自动化单元测试，Cesium采用了单元测试Jasmine框架，可以实现接口的自动化测试以及接口覆盖率等统计效果。
+⑥ThirdParty文件夹
+Cesium中接口实现和单元测试所依赖的外部第三方库，如代码编辑器codemirror、单元测试框架库jasmine、JavaScript语法和风格检查工具jshint等
+————————————————
+版权声明：本文为CSDN博主「右弦GISer」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/weixin_45782925/article/details/122690417

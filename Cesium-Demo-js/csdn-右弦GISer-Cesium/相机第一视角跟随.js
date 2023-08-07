@@ -1,0 +1,1 @@
+viewer.camera.lookAt(position, new Cesium.HeadingPitchRange(headingPitchRoll.heading, headingPitchRoll.pitch, 100))

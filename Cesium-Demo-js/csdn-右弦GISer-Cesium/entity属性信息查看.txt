@@ -1,0 +1,30 @@
+Cesium.GeoJsonDataSource.load("./data/test.geojson").then(function(dataSource) {
+    this.viewer.dataSources.add(dataSource);
+    let entities = dataSource.entities.values;
+    entities.forEach(entity => {
+        console.log(entity._properties);}
+    });
+})
+————————————————
+版权声明：本文为CSDN博主「右弦GISer」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/weixin_45782925/article/details/123390652
+// 点击查询
+clickSearch(viewer);
+
+/**
+ * @description: 点击时控制台输出entity的属性信息
+ * @param {*} _viewer
+ * @return {*}
+ */
+function clickSearch(_viewer) {
+    let handler = new Cesium.ScreenSpaceEventHandler(_viewer.scene.canvas);
+    handler.setInputAction((event) => {
+        let pick = _viewer.scene.pick(event.position);
+        if (Cesium.defined(pick)) {
+            console.log(pick.id._properties);
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+}
+————————————————
+版权声明：本文为CSDN博主「右弦GISer」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/weixin_45782925/article/details/123390652

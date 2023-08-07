@@ -1,0 +1,2 @@
+使用Cesium提供的SingleTileImageryProvider接口，添加图片到地球表面作为底图。
+https://cesium.com/learn/cesiumjs/ref-doc/SingleTileImageryProvider.html?classFilter=SingleTileImageryProvider
