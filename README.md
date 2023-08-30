@@ -126,5 +126,7 @@ This repository can help us to learn all kinds of examples、codes and plugins a
 <center><strong>浏览器控制台查看 DataEarth 代码格式化</center>
 
 8、[Vue-Cesium](https://raw.githubusercontent.com/zouyaoji/vue-cesium/dev/website/public/Cesium/Cesium.js)
-<img src="./get-Vue_Cesium">
+<img src="./get-Vue_Cesium.png">
 <center><strong>浏览器控制台查看 Vue-Cesium 代码格式化</center>
+
+- Note: ```The primary goal of repository is just to learn Cesium official API and invoked codes, hope this can help some developers, only for personal study and research Cesium source codes to use and communicate, no permission for commercial purposes and values !!!```
