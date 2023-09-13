@@ -1,0 +1,37 @@
+    .cesium-plugin-divGraphic {
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      --text-color: #ccc;
+      --border-color: #15d1f2;
+      --box-shadow-color: rgba(21, 209, 242, 0.5);
+    }
+
+    .cesium-plugin-divBoderLabel-boder::before {
+      animation-delay: -4s;
+      content: "";
+      margin: -5%;
+      box-shadow: inset 0 0 0 2px;
+      animation: var(--animation-name) 8s linear infinite;
+    }
+
+    .cesium-plugin-divBoderLabel-boder::before,
+    .cesium-plugin-divBoderLabel-boder::after {
+      content: "";
+      margin: -5%;
+      box-shadow: inset 0 0 0 2px;
+      animation: var(--animation-name) 8s linear infinite;
+    }
+
+    .cesium-plugin-divBoderLabel {
+        color: #f7f3f3;
+            background: rgb(1 29 66 / 79%);
+          padding: 5px;
+          border-radius: 4px;
+    }
+
+    .cesium-plugin-divBoderLabel-boder {
+      color: var(--border-color);
+      box-shadow: inset 0 0 0 1px var(--box-shadow-color);
+    }
