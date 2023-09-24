@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>效果</title>
+    <script src="libs/Cesium/Cesium.js"></script>
+    <link href="libs/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cesiumContainer" style="width: 100%; height: 100%"></div>
+    <script src="libs/CesiumPlugin/cesium-plugin.js"></script>
+    <script>
+      const viewer = new CesiumPlugin.Viewer("cesiumContainer");
+
+      /**
+       * @description: 产生随机线
+       * @param center：中心点坐标
+       * @param num：随机线数量
+       * @return 返回线
+       */
+      function generateRandomLines(center, num) {
+        let geometryInstances = [];
+        for (let i = 0; i < num; i++) {
+          let lon = center[0] + (Math.random() - 0.5) * 0.1;
+          let lat = center[1] + (Math.random() - 0.5) * 0.1;
+          const geometry = new Cesium.PolylineGeometry({
+            positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+              lon,
+              lat,
+              0,
+              lon,
+              lat,
+              5000 * Math.random(),
+            ]),
+            width: 1.0,
+          });
+          const instance = new Cesium.GeometryInstance({ geometry: geometry });
+          geometryInstances.push(instance);
+        }
+        return geometryInstances;
+      }
+
+      viewer.scene.primitives.add(
+        new Cesium.Primitive({
+          geometryInstances: this.generateRandomLines([104.065, 30.659], 100),
+          appearance: new Cesium.PolylineMaterialAppearance({
+            material: Cesium.Material.fromType(
+              Cesium.Material.PolylineFlowType,
+              {
+                color: new Cesium.Color(1.0, 0.5, 0.0, 0.5),
+                speed: 5.0,
+                percent: 0.2,
+                gradient: 0.0,
+              }
+            ),
+          }),
+          allowPicking: false,
+        })
+      );
+      const center = Cesium.Cartesian3.fromDegrees(104.065, 30.659);
+      viewer.camera.lookAt(
+        center,
+        new Cesium.Cartesian3(0.0, -10000.0, 3930.0)
+      );
+      viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    </script>
+  </body>
+</html>

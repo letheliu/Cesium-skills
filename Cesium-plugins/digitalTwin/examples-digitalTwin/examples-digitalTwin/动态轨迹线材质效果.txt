@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>效果</title>
+    <script src="libs/dat.gui.min.js"></script>
+    <script src="libs/Cesium/Cesium.js"></script>
+    <link
+      href="libs/Cesium/Widgets/widgets.css"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cesiumContainer" style="width: 100%; height: 100%"></div>
+    <script src="libs/CesiumPlugin/cesium-plugin.js"></script>
+    <script>
+      const viewer = new CesiumPlugin.Viewer("cesiumContainer", {
+        imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
+          url: "http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer",
+        }),
+      });
+      let primitives = [];
+
+      viewer.scene.camera.setView({
+        destination: {
+          x: -2264713.773444937,
+          y: 4437097.6365463445,
+          z: 4052169.8549779626,
+        },
+        orientation: {
+          heading: 5.625615618387119,
+          pitch: -0.5513619022102629,
+          roll: 0.00001297575603054213,
+        },
+      });
+      loadLinesData();
+
+      //加载数据
+      function loadLinesData() {
+        let url = "data/bj-lines-bus.json";
+        Cesium.Resource.fetchJson(url).then((data) => {
+          var busLines = [];
+          data.map(function (busLine, idx) {
+            var prevPt;
+            var points = [];
+            for (var i = 0; i < busLine.length; i += 2) {
+              var pt = [busLine[i], busLine[i + 1]];
+              if (i > 0) {
+                pt = [prevPt[0] + pt[0], prevPt[1] + pt[1]];
+              }
+              prevPt = pt;
+
+              var longitude = pt[0] / 1e4;
+              var latitude = pt[1] / 1e4;
+              // points.push([longitude, latitude]);
+              points.push(longitude);
+              points.push(latitude);
+            }
+
+            busLines.push({
+              positions: points,
+              color: new Cesium.Color(
+                Math.random() * 0.5 + 0.5,
+                Math.random() * 0.8 + 0.2,
+                0.0,
+                1.0
+              ),
+              width: 2.0,
+            });
+          });
+          addLineDatasPrimitive(busLines);
+          // addLineDatasEntity(busLines);
+        });
+      }
+
+      //添加到场景 Primitive 方式
+      function addLineDatasPrimitive(busLines) {
+        let scene = viewer.scene;
+        let color;
+
+        busLines.forEach((line) => {
+          color = new Cesium.Color(
+            0,
+            Math.random() * 0.8 + 0.2,
+            Math.random() * 0.5 + 0.5,
+            1.0
+          );
+          var appearance = new Cesium.PolylineMaterialAppearance({
+            material: Cesium.Material.fromType(
+              Cesium.Material.PolylineFlowType,
+              {
+                speed: 3 * Math.random(),
+                color: line.color,
+                percent: 0.01,
+                gradient: 0.2,
+              }
+            ),
+          });
+          var primitive = new Cesium.Primitive({
+            appearance,
+            geometryInstances: new Cesium.GeometryInstance({
+              geometry: new Cesium.PolylineGeometry({
+                positions: Cesium.Cartesian3.fromDegreesArray(line.positions),
+                width: 3.0,
+                vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
+              }),
+            }),
+          });
+          primitives.push(scene.primitives.add(primitive));
+        });
+      }
+
+      let polylineMaterial = { type: "PolylineTrailMaterial" };
+
+      const gui = new dat.GUI();
+      const f = gui.addFolder("线段材质类型");
+      f.add(polylineMaterial, "type", [
+        "PolylineTrailMaterial",
+        "PolylineLightingTrailMaterial",
+        "PolylineLightingMaterial",
+        "PolylineImageTrailMaterial",
+        "PolylineFlowMaterial",
+        "PolylineFlickerMaterial",
+        "PolylineEmissionMaterial",
+      ]).onChange((value) => {
+        let color = new Cesium.Color(
+          0,
+          Math.random() * 0.8 + 0.2,
+          Math.random() * 0.5 + 0.5,
+          1.0
+        );
+        switch (value) {
+          case "PolylineTrailMaterial":
+            changeMaterial(
+              new Cesium.PolylineMaterialAppearance({
+                material: Cesium.Material.fromType(
+                  Cesium.Material.PolylineTrailType,
+                  {
+                    speed: 3 * Math.random(),
+                    color: color,
+                  }
+                ),
+              })
+            );
+            changeMaterial(appearance);
+            break;
+          case "PolylineLightingTrailMaterial":
+            changeMaterial(
+              new Cesium.PolylineMaterialAppearance({
+                material: Cesium.Material.fromType(
+                  Cesium.Material.PolylineLightingTrailType,
+                  {
+                    speed: 3 * Math.random(),
+                    color: color,
+                    image: "images/flowLine.png",
+                  }
+                ),
+              })
+            );
+            changeMaterial(appearance);
+            break;
+          case "PolylineLightingMaterial":
+            changeMaterial(
+              new Cesium.PolylineMaterialAppearance({
+                material: Cesium.Material.fromType(
+                  Cesium.Material.PolylineLightingType,
+                  {
+                    color: color,
+                    image: "images/flowLine.png",
+                  }
+                ),
+              })
+            );
+            changeMaterial(appearance);
+            break;
+          case "PolylineImageTrailMaterial":
+            changeMaterial(
+              new Cesium.PolylineMaterialAppearance({
+                material: Cesium.Material.fromType(
+                  Cesium.Material.PolylineImageTrailType,
+                  {
+                    color: color,
+                    speed: 3 * Math.random(),
+                    image: "images/flowLine.png",
+                    repeat: new Cesium.Cartesian2(1, 1),
+                  }
+                ),
+              })
+            );
+            changeMaterial(appearance);
+            break;
+          case "PolylineFlowMaterial":
+            changeMaterial(
+              new Cesium.PolylineMaterialAppearance({
+                material: Cesium.Material.fromType(
+                  Cesium.Material.PolylineFlowType,
+                  {
+                    speed: 3 * Math.random(),
+                    color: color,
+                    percent: 0.01,
+                    gradient: 0.2,
+                  }
+                ),
+              })
+            );
+            changeMaterial(appearance);
+            break;
+          case "PolylineFlickerMaterial":
+            changeMaterial(
+              new Cesium.PolylineMaterialAppearance({
+                material: Cesium.Material.fromType(
+                  Cesium.Material.PolylineFlickerType,
+                  {
+                    speed: 3 * Math.random(),
+                    color: color,
+                  }
+                ),
+              })
+            );
+            changeMaterial(appearance);
+            break;
+          case "PolylineEmissionMaterial":
+            changeMaterial(
+              new Cesium.PolylineMaterialAppearance({
+                material: Cesium.Material.fromType(
+                  Cesium.Material.PolylineEmissionType,
+                  {
+                    color: color,
+                  }
+                ),
+              })
+            );
+            changeMaterial(appearance);
+            break;
+        }
+      });
+      f.open();
+
+      function changeMaterial(appearance) {
+        for (let p of primitives) {
+          p.appearance = appearance;
+        }
+      }
+    </script>
+  </body>
+</html>

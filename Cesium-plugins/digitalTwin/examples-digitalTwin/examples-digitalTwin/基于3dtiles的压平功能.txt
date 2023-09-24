@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>效果</title>
+    <script src="libs/Cesium/Cesium.js"></script>
+    <link href="libs/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="cesiumContainer" style="width: 100%; height: 100%"></div>
+    <script src="libs/CesiumPlugin/cesium-plugin.js"></script>
+    <script>
+        alert("鼠标左键开始画压平区域，右键结束");
+        const viewer = new CesiumPlugin.Viewer("cesiumContainer");
+
+        //取消entity的双击事件
+        viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+        //开启地形深度检测
+        viewer.scene.globe.depthTestAgainstTerrain = true; //默认为false
+        var palaceTileset = new Cesium.Cesium3DTileset({
+            //加载倾斜示范数据
+            url: "http://123.6.56.6:8099/demo/3Dtiles/tileset.json",
+            skipLevelOfDetail: true,//这个参数在金字塔数据加载中，可以跳过一些级别，这样整体的效率会高一些，数据占用也会小一些。
+            baseScreenSpaceError: 1024,
+            maximumScreenSpaceError: 10, // 数值加大，能让最终成像变模糊，初始化的清晰度
+            skipScreenSpaceErrorFactor: 16,
+            skipLevels: 16,
+            immediatelyLoadDesiredLevelOfDetail: false,
+            loadSiblings: true, // 如果为true则不会在已加载完概况房屋后，自动从中心开始超清化房屋
+            cullWithChildrenBounds: true,
+            cullRequestsWhileMoving: true,
+            cullRequestsWhileMovingMultiplier: 10, // 值越小能够更快的剔除
+            preloadWhenHidden: true,
+            preferLeaves: true,
+            maximumMemoryUsage: 4080, // 内存分配变小有利于倾斜摄影数据回收，提升性能体验，分配的越多倾斜的逐帧加载效果越小
+            progressiveResolutionHeightFraction: 0.5, // 数值偏于0能够让初始加载变得模糊
+            dynamicScreenSpaceErrorDensity: 0.5, // 数值加大，能让周边加载变快
+            dynamicScreenSpaceErrorFactor: 1,
+            dynamicScreenSpaceError: false,
+        })
+        palaceTileset.readyPromise.then(function (palaceTileset) {
+            viewer.scene.primitives.add(palaceTileset);
+            var heightOffset = -380.0;  //高度
+            var boundingSphere = palaceTileset.boundingSphere;
+            var cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);
+            var surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
+            var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, heightOffset);
+            var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
+            palaceTileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+
+            viewer.zoomTo(palaceTileset, new Cesium.HeadingPitchRange(0.5, -0.2, palaceTileset.boundingSphere.radius * 1.0));
+
+        });
+        var scene = viewer.scene
+        //添加
+        function getDegreesArray(feature) {
+            let degreesArray = [];
+            let coordinates;
+            if (feature.geometry.type == "MultiPolygon") {
+                coordinates = feature.geometry.coordinates[0][0];
+            } else if (feature.geometry.type == "Polygon") {
+                coordinates = feature.geometry.coordinates[0];
+            } else if (feature.geometry.type == "LineString") {
+                coordinates = feature.geometry.coordinates;
+            }
+
+            for (let i = 0; i < coordinates.length; i++) {
+                const element = coordinates[i];
+                degreesArray.push(element[0]);
+                degreesArray.push(element[1]);
+            }
+            return degreesArray;
+        }
+        scene.camera.setView({
+            destination: new Cesium.Cartesian3(-1932892.9345402804, 4846471.400033774, 3656989.677979641),
+            orientation: {
+                heading: 6.273779297928513,
+                pitch: -0.6277154332183192,
+                roll: 0.0000013447666198374009,
+            }
+        });
+        //绘制线和面 必要条件 drwaPos 节点经纬度
+        let drawpolygon, drawline, drwaPos = [], yapingpos = [], flatCustomShader
+        let polygonHierarchy = new Cesium.PolygonHierarchy()
+        let lineEntity = new Cesium.Entity()
+        let polygonEntity = new Cesium.Entity()
+        /**
+         * 笛卡尔转经纬度
+         * @param {*} cartesian 笛卡尔坐标
+         */
+        function transformCartesianToWGS84(cartesian) {
+            //将笛卡尔坐标转化为弧度坐标
+            var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+            //将弧度坐标转换为经纬度坐标（先转弧度再转经纬度简单一点，直接转换的方法也有，不过推荐用这种）
+            var longitude = Cesium.Math.toDegrees(cartographic.longitude); //经度
+            var latitude = Cesium.Math.toDegrees(cartographic.latitude); //纬度
+            var height = cartographic.height; //高度
+            return { lng: longitude, lat: latitude, h: height }
+        }
+        //设置数据源
+        let tempCollection = new Cesium.CustomDataSource("temp"); //临时数据源用于临时添加数据
+        viewer.dataSources.add(tempCollection);
+        var handlerDraw = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas); //绘制图形
+        /**
+         * 场景划面事件
+         * @param {*} type 分析类型
+         */
+        drawPolygonQuery('压平分析')
+        function drawPolygonQuery(type) {
+            drwaPos = []
+            polygonHierarchy = new Cesium.PolygonHierarchy()
+            handlerDraw.setInputAction((e) => {
+                var position = viewer.scene.pickPosition(e.position);
+                var cartesian = transformCartesianToWGS84(position)
+                //添加线和面的数组
+                if (drwaPos.length == 0) {
+                    drwaPos.push(cartesian.lng, cartesian.lat)
+                    yapingpos.push([cartesian.lng, cartesian.lat, cartesian.h])
+                    polygonHierarchy.positions.push(position.clone())
+                }
+                drwaPos.push(cartesian.lng, cartesian.lat)
+                polygonHierarchy.positions.push(position.clone())
+                yapingpos.push([cartesian.lng, cartesian.lat, cartesian.h])
+                if (!drawline) createLine()
+                if (!drawpolygon) creatPolygon()
+            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+            handlerDraw.setInputAction((movement) => {
+                var position = viewer.scene.pickPosition(movement.endPosition);
+                if (position) {
+                    var cartesian = transformCartesianToWGS84(position)
+                    if (drwaPos.length >= 4) {
+                        drwaPos.pop();
+                        drwaPos.pop();
+                        drwaPos.push(cartesian.lng, cartesian.lat);
+
+                        yapingpos.pop();
+                        yapingpos.push([cartesian.lng, cartesian.lat, cartesian.h])
+                    }
+                    //如果大于3个点则组成数组
+                    if (drwaPos.length >= 4) {
+                        polygonHierarchy.positions.pop()
+                        polygonHierarchy.positions.push(position);
+                    }
+                }
+            }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+            handlerDraw.setInputAction((e) => {
+                var position = viewer.scene.pickPosition(e.position);
+                if (position) {
+                    //形成闭环 吧第一个数组也加进来
+                    drwaPos.push(drwaPos[0], drwaPos[1]);
+                    yapingpos.push(yapingpos[0])
+                    if (polygonHierarchy.positions.length <= 3) {
+                        endDraw()
+                        showMsg('请绘制3个以上的点')
+                        return
+                    } else {
+                        endDraw()
+                        //执行查询功能
+                        if (type == '压平分析') {
+                            let polygon = yapingpos
+                            let geometry = positionTogeojson(drwaPos, 'polygon')
+                            var center = turf.center(geometry);
+                            let lng = center.geometry.coordinates[0]
+                            let lat = center.geometry.coordinates[1]
+                            var polyCenter = Cesium.Cartesian3.fromDegrees(lng, lat, 0);
+                            var ellipsoid = viewer.scene.globe.ellipsoid;
+                            let cartographic = viewer.scene.globe.ellipsoid.cartesianToCartographic(polyCenter);
+                            var height = viewer.scene.sampleHeight(cartographic);
+                            console.log(height);
+                            //开始压平
+                            let flatCustomShader = CesiumPlugin.applyFlat(palaceTileset, [
+                                {
+                                    polygon,
+                                    flatHeight: -33,
+                                },
+                            ]);
+                            palaceTileset.customShader = flatCustomShader;
+                        }
+                    }
+                }
+            }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+        }
+        //绘制线的回调事件
+        function createLine() {
+            drawline = lineEntity.polyline = {
+                positions: new Cesium.CallbackProperty(() => {
+                    return Cesium.Cartesian3.fromDegreesArray(drwaPos)
+                }, false),
+                width: 100
+                , material: new Cesium.PolylineGlowMaterialProperty({ //设置Glow材质
+                    //泛光强度
+                    glowPower: 0.02,
+                    //泛光颜色
+                    color: Cesium.Color.fromCssColorString('#00CED1').withAlpha(0.5)
+                })
+                , clampToGround: true
+            }
+            tempCollection.entities.add(lineEntity)
+        }
+        //绘制面的回调事件
+        function creatPolygon() {
+            drawpolygon = polygonEntity.polygon = {
+                hierarchy: new Cesium.CallbackProperty(() => {
+                    return polygonHierarchy
+                }, false),
+                material: Cesium.Color.fromCssColorString('#000000').withAlpha(0.3)
+                , clampToGround: true,
+                outline: false,
+                outlineColor: Cesium.Color.fromCssColorString('#00FA9A').withAlpha(0.8)//黑色轮廓线
+            }
+            tempCollection.entities.add(polygonEntity)
+        }
+        //结束绘制
+        function endDraw() {
+            handlerDraw.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+            handlerDraw.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            handlerDraw.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+            //初始化划线
+            drawline = null
+            drawpolygon = null
+        }
+        /**
+         * 经纬度串转geojson
+         * @param {*} drwaPos  经纬度串
+         */
+        function positionTogeojson(drwaPos, type) {
+            let boxArry = [], buffered
+            if (type == 'line') {
+                for (let i = 0; i < drwaPos.length; i++) {
+                    boxArry.push([drwaPos[i], drwaPos[i + 1]])
+                    i++
+                }
+                buffered = turf.lineString(boxArry);
+            } else {
+                for (let i = 0; i < drwaPos.length; i++) {
+                    boxArry.push([drwaPos[i], drwaPos[i + 1]])
+                    i++
+                }
+                buffered = turf.polygon([boxArry]);
+            }
+            return buffered
+        }
+    </script>
+</body>
+
+</html>

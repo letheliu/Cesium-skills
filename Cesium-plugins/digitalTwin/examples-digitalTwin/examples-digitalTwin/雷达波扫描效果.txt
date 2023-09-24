@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>效果</title>
+    <script src="libs/Cesium/Cesium.js"></script>
+    <link
+      href="libs/Cesium/Widgets/widgets.css"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cesiumContainer" style="width: 100%; height: 100%"></div>
+    <script src="libs/CesiumPlugin/cesium-plugin.js"></script>
+    <script>
+      const viewer = new CesiumPlugin.Viewer("cesiumContainer");
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(116.39, 38.9, 90000),
+        orientation: {
+          heading: Cesium.Math.toRadians(0),
+          pitch: Cesium.Math.toRadians(-40),
+          roll: 0.0,
+        },
+      })
+      const radar = new CesiumPlugin.RadarScan({
+        scene: viewer.scene,
+        lonlat: [116.39, 39.9],
+        height: 40000.0,
+        speed: 0.8
+      })
+
+      setTimeout(()=>{
+        radar.destroy();
+      }, 10000);
+    </script>
+  </body>
+</html>

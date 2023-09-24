@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>效果</title>
+    <script src="libs/dat.gui.min.js"></script>
+    <script src="libs/Cesium/Cesium.js"></script>
+    <link href="libs/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+</head>
+<body>
+<div id="cesiumContainer" style="width: 100%; height: 100%"></div>
+<script src="libs/CesiumPlugin/cesium-plugin.js"></script>
+<script>
+    let terrain = new Cesium.CesiumTerrainProvider({
+        url: "http://data.marsgis.cn/terrain/",
+    });
+    let active = true, step = 0, positionStart, positionEnd, currentEntity;
+    const viewer = new CesiumPlugin.Viewer("cesiumContainer", {
+        terrainProvider: terrain,
+        // terrainProvider: Cesium.createWorldTerrain(),
+    });
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+    viewer.camera.flyTo({
+        destination: {x: 1072768.827965875, y: 5375013.608414561, z: 3280042.6485143662}
+    })
+    const viewAnalysisFeature = new CesiumPlugin.Sightline({
+        scene: viewer.scene,
+        angle: 120
+    });
+
+    const initLeftClick = () => {
+        const handler = new Cesium.ScreenSpaceEventHandler();
+        handler.setInputAction((event) => {
+            // setStep(step + 1);
+            // console.log(active.current,step.current)
+            if (active) {
+                step = step + 1;
+                if (step === 1) {
+                    positionStart = viewer.scene.pickPosition(event.position);
+                    currentEntity = createEntity();
+                } else if (step === 2) {
+                    finish();
+                }
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
+    }
+
+    const finish = () => {
+        //删除entity
+        if (currentEntity instanceof Cesium.Entity) {
+            viewer.entities.remove(currentEntity);
+            currentEntity = undefined;
+        }
+
+        // 重置绘制步骤以及激活状态
+        step = 0;
+        active = false
+
+        // 绘制可视域分析图
+        if (positionStart && positionEnd) {
+            viewAnalysisFeature.analysis(positionStart, positionEnd);
+        }
+    }
+
+    const initMouseMove = () => {
+        const handler = new Cesium.ScreenSpaceEventHandler();
+        handler.setInputAction((event) => {
+            if (active) {
+                positionEnd = viewer.scene.pickPosition(event.endPosition);
+                // console.log(positionStart,positionEnd)
+            }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
+
+        return handler;
+    }
+
+    const createEntity = () => {
+        return viewer.entities.add({
+            polyline: {
+                width: 2,
+                material: Cesium.Color.GREEN,
+                positions: new Cesium.CallbackProperty(() => {
+                    if (!positionStart) {
+                        return;
+                    }
+                    const position1 = positionStart.clone(new Cesium.Cartesian3());
+                    const position2 = positionEnd.clone() || position1;
+
+                    return [
+                        position1,
+                        position2
+                    ]
+                }, false),
+                // depthFailMaterial: Cesium.Color.RED
+            }
+        });
+    }
+
+    initLeftClick();
+    initMouseMove();
+
+</script>
+</body>
+</html>

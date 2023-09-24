@@ -1,0 +1,61 @@
+// 所有isPointInPolygon函数
+
+// 12个元素的数组
+vec2 points_12[12];
+bool isPointInPolygon_12(vec2 point) {
+	int nCross = 0; // 交点数
+	const int n = 12;
+	for (int i = 0; i < n; i++) {
+		vec2 p1 = points_12[i];
+		vec2 p2 = points_12[int(mod(float(i + 1), float(n)))];
+		if (p1[1] == p2[1]) {
+			continue;
+		}
+		if (point[1] < min(p1[1], p2[1])) {
+			continue;
+		}
+		if (point[1] >= max(p1[1], p2[1])) {
+			continue;
+		}
+		float x = p1[0] + ((point[1] - p1[1]) * (p2[0] - p1[0])) / (p2[1] -
+			p1[1]);
+		if (x > point[0]) {
+			nCross++;
+		}
+	}
+	return int(mod(float(nCross), float(2))) == 1;
+}
+void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
+	vec3 modelMC = vsInput.attributes.positionMC;
+	vec4 model_local_position = vec4(modelMC.x, modelMC.y, modelMC.z, 1.0);
+	vec4 tileset_local_position = u_tileset_worldToLocalMatrix * czm_model *
+		model_local_position;
+	vec2 position2D = vec2(tileset_local_position.x, tileset_local_position
+		.y);
+	float ground_z = 0.0 + u_flatHeight;
+	// 多个多边形区域
+	points_12[0] = vec2(-67.57584325643256, 64.14051670208573);
+	points_12[1] = vec2(-53.14044556720182, -41.59528324799612);
+	points_12[2] = vec2(15.6864659904968, -38.52477146498859);
+	points_12[3] = vec2(39.40164644201286, 14.07727553974837);
+	points_12[4] = vec2(-67.57584325643256, 64.14051670208573);
+	points_12[5] = vec2(-3.8075031901244074, 90.86519830580801);
+	points_12[6] = vec2(44.13174553634599, 81.3582119634375);
+	points_12[7] = vec2(46.53550376370549, -7.442195376381278);
+	points_12[8] = vec2(-10.14274328877218, -37.321718545630574);
+	points_12[9] = vec2(-68.71594191319309, -19.29031405551359);
+	points_12[10] = vec2(-87.43510169349611, 40.051631139591336);
+	points_12[11] = vec2(-67.57584325643256, 64.14051670208573);
+	if (isPointInPolygon_12(position2D)) {
+		vec4 tileset_local_position_transformed = vec4(
+			tileset_local_position.x, tileset_local_position.y,
+			ground_z, 1.0);
+		vec4 model_local_position_transformed = czm_inverseModel *
+			u_tileset_localToWorldMatrix *
+			tileset_local_position_transformed;
+		vsOutput.positionMC.xy = model_local_position_transformed.xy;
+		vsOutput.positionMC.z = model_local_position_transformed.z +
+			modelMC.z * 0.002;
+		return;
+	}
+}

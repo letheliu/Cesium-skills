@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>效果</title>
+    <script src="libs/Cesium/Cesium.js"></script>
+    <link href="libs/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cesiumContainer" style="width: 100%; height: 100%"></div>
+    <script src="libs/CesiumPlugin/cesium-plugin.js"></script>
+    <script>
+      const viewer = new CesiumPlugin.Viewer("cesiumContainer");
+
+      addTile();
+      setView();
+      addFace();
+
+      function addTile() {
+        const tileset = viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            // 离线数据
+            url: "./data/building/tileset2.json",
+          })
+        );
+
+        tileset.readyPromise.then(function (tileset) {
+          // viewer.flyTo(tileset, {
+          //   duration: 0
+          // });
+          tileset.style = new Cesium.Cesium3DTileStyle({
+            color: {
+              conditions: [
+                // 模型基础颜色
+                ["true", "rgba(0, 127, 255 ,1)"],
+              ],
+            },
+          });
+          tileset.customShader = new Cesium.CustomShader({
+            lightingModel: Cesium.LightingModel.UNLIT,
+            fragmentShaderText: `
+            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+  // 高亮的范围(_baseHeight ~ _baseHeight + _heightRange) 默认是 0-60米
+  float _heightRange = 60.0;
+  float vtxf_height = fsInput.attributes.positionMC.z;
+  float vtxf_a12 = vtxf_height / _heightRange+0.3;
+  material.diffuse *= vec3(vtxf_a12);
+}
+`,
+          });
+        });
+      }
+
+      function setView() {
+        const pos = Cesium.Cartesian3.fromDegrees(
+          113.92938415637772,
+          22.4835217567296,
+          2000
+        );
+        viewer.scene.camera.flyTo({
+          duration: 0,
+          destination: pos,
+          orientation: {
+            heading: 0,
+            pitch: -Math.PI / 4, //-Math.PI/2,
+            roll: 0,
+          },
+        });
+      }
+
+      function addFace() {
+        // const url = "http://data.mars3d.cn/file/geojson/hefei-shequ.json";
+        const url = "./data/polygon.json";
+        Cesium.Resource.fetchJson(url).then((res) => {
+          const { polygon } = CesiumPlugin.Geo.GeoJsonToGraphics(res);
+          // console.error(polygon);
+
+          polygon.forEach((item) => {
+            const {
+              attributes: { color, name },
+              geometry,
+            } = item;
+
+            const positions = [];
+            geometry.rings[0].forEach((pos) => {
+              positions.push(
+                Cesium.Cartesian3.fromDegrees(pos[0], pos[1], pos[2])
+              );
+            });
+
+            const polygonEntity = viewer.entities.add({
+              polygon: {
+                hierarchy: new Cesium.PolygonHierarchy(positions),
+                material:
+                  Cesium.Color.fromCssColorString(color).withAlpha(0.15),
+                perPositionHeight: true,
+              },
+            });
+
+            // viewer.entities.add({
+            //   polyline: {
+            //     positions,
+            //     clampToGround: false,
+            //     width: 2,
+            //     closure: true,
+            //     material: new PolylineTrailMaterialProperty({
+            //       speed: 2,
+            //       color: new Cesium.Color.fromCssColorString(color),
+            //       percent: 0.8, // 尾巴拖多少长
+            //       // gradient: 0.01, // 变化率
+            //     }),
+            //   },
+            // });
+
+            const aPos = polygonEntity.polygon.hierarchy._value.positions;
+            var iX = 0,
+              iY = 0,
+              iZ = 0;
+            for (var j = 0; j < aPos.length; j++) {
+              iX = aPos[j].x + iX;
+              iY = aPos[j].y + iY;
+              iZ = aPos[j].z + iZ;
+            }
+            iX = iX / aPos.length;
+            iY = iY / aPos.length;
+            iZ = iZ / aPos.length;
+            const center = new Cesium.Cartesian3(iX, iY, iZ);
+            new CesiumPlugin.DIVLabel(viewer, center, name);
+          });
+
+          // this.viewer.flyTo(this.viewer.entities, {
+          //   duration: 0
+          // });
+        });
+      }
+    </script>
+  </body>
+</html>

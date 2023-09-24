@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>效果</title>
+    <script src="libs/Cesium/Cesium.js"></script>
+    <link href="libs/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cesiumContainer" style="width: 100%; height: 100%"></div>
+    <script src="libs/CesiumPlugin/cesium-plugin.js"></script>
+    <script>
+      const viewer = new CesiumPlugin.Viewer("cesiumContainer");
+      viewer.clockViewModel.shouldAnimate = true;
+      addModel();
+      function addModel() {
+        const position = Cesium.Cartesian3.fromDegrees(123.54, 47.19, 0);
+        const euler = new Cesium.HeadingPitchRoll(
+          Cesium.Math.toRadians(90),
+          0,
+          0
+        );
+        const orientation = Cesium.Transforms.headingPitchRollQuaternion(
+          position,
+          euler
+        );
+
+        viewer.entities.add({
+          position,
+          orientation,
+          name: "",
+          model: {
+            uri: "./data/gltf/windTurbine.glb",
+            scale: 20,
+          },
+        });
+
+        const pos = Cesium.Cartesian3.fromDegrees(123.54, 47.19, 8800);
+
+        const manager = new CesiumPlugin.CameraManager(viewer.scene);
+        manager.setConfig({
+          cameraPosition: pos,
+          targetPosition: position,
+          type: "ArroundPoint", // AroundView,ArroundPoint
+          heading: 0,
+          pitch: -60,
+          range: 50000,
+        });
+        manager.start();
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>效果</title>
+    <script src="libs/Cesium/Cesium.js"></script>
+    <link href="libs/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cesiumContainer" style="width: 100%; height: 100%"></div>
+    <script src="libs/CesiumPlugin/cesium-plugin.js"></script>
+    <script>
+      let terrain = new Cesium.CesiumTerrainProvider({
+        //url: "../Source/Terrain/beijing/"
+        url: "http://data.marsgis.cn/terrain/",
+      });
+      const viewer = new CesiumPlugin.Viewer("cesiumContainer", {
+        terrainProvider: terrain
+      });
+      //设置初始位置
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(
+          116.370854,
+          30.944157,
+          10000
+        ),
+      });
+
+      //开启深度检测
+      viewer.scene.globe.depthTestAgainstTerrain = true;
+
+      const terrainClip = new CesiumPlugin.TerrainClip({
+        scene: viewer.scene,
+        height: 300,
+        splitNum: 50,
+      });
+
+      // var positions = [
+      //   { x: -2480825.779644006, y: 4823039.348573122, z: 3344998.9734951435 },
+      //   { x: -2481057.6623671586, y: 4822939.719360245, z: 3344970.8291531955 },
+      //   { x: -2481026.5803391673, y: 4823096.907581604, z: 3344768.5949868727 },
+      //   { x: -2480854.0689538443, y: 4823168.905374106, z: 3344792.5711652176 },
+      // ];
+
+      const positions = [
+        Cesium.Cartesian3.fromDegrees(116.33421, 30.944035),
+        Cesium.Cartesian3.fromDegrees(116.334262, 30.899157),
+        Cesium.Cartesian3.fromDegrees(116.370831, 30.89919),
+        Cesium.Cartesian3.fromDegrees(116.370854, 30.944157),
+      ];
+
+      terrainClip.updateData(positions);
+    </script>
+  </body>
+</html>

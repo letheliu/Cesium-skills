@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>效果</title>
+    <script src="libs/dat.gui.min.js"></script>
+    <script src="libs/Cesium/Cesium.js"></script>
+    <link href="libs/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cesiumContainer" style="width: 100%; height: 100%"></div>
+    <script src="libs/CesiumPlugin/cesium-plugin.js"></script>
+    <script>
+      const viewer = new CesiumPlugin.Viewer("cesiumContainer");
+
+      addRegion();
+      //坐标转换
+      function coordinateToPositions(coordinates) {
+        let positions = [];
+        coordinates.map((c) => {
+          positions.push(Cesium.Cartesian3.fromDegrees(c[0], c[1], 50));
+        });
+        return positions;
+      }
+
+      let primitive;
+      function addRegion() {
+        fetch("./data/wangjing.geojson")
+          .then((res) => {
+            return res.json();
+          })
+          .then((res) => {
+            const wallInstance = new Cesium.GeometryInstance({
+              geometry: Cesium.WallGeometry.fromConstantHeights({
+                positions: coordinateToPositions(
+                  res.features[0].geometry.coordinates[0]
+                ),
+                maximumHeight: 100.0,
+                minimumHeight: 0,
+              }),
+            });
+
+            primitive = viewer.scene.primitives.add(
+              new Cesium.Primitive({
+                geometryInstances: [wallInstance],
+                appearance: new Cesium.MaterialAppearance({
+                  material: Cesium.Material.fromType(
+                    Cesium.Material.WallImageTrailType,
+                    {
+                      image: "images/arrow.png",
+                    }
+                  ),
+                }),
+              })
+            );
+
+            viewer.camera.flyTo({
+              destination: Cesium.Cartesian3.fromDegrees(
+                116.464022,
+                39.991424,
+                1000
+              ),
+            });
+          });
+      }
+
+      let wallMaterial = { type: "WallImageTrailType" };
+      const gui = new dat.GUI();
+      const f = gui.addFolder("材质类型");
+      f.add(wallMaterial, "type", [
+        "WallImageTrailType",
+        "WallDiffuseType",
+        "WallRippleType",
+        "WallTrailType",
+      ]).onChange((value) => {
+        switch (value) {
+          case "WallImageTrailType":
+            primitive.appearance = new Cesium.MaterialAppearance({
+              material: Cesium.Material.fromType(
+                Cesium.Material.WallImageTrailType,
+                {
+                  image: "images/arrow.png",
+                }
+              ),
+            });
+            break;
+          case "WallDiffuseType":
+            primitive.appearance = new Cesium.MaterialAppearance({
+              material: Cesium.Material.fromType(
+                Cesium.Material.WallDiffuseType,
+                {
+                  color: Cesium.Color.RED,
+                }
+              ),
+            });
+            break;
+          case "WallRippleType":
+            primitive.appearance = new Cesium.MaterialAppearance({
+              material: Cesium.Material.fromType(
+                Cesium.Material.WallRippleType,
+                {
+                  color: Cesium.Color.RED,
+                  speed: 3.0,
+                  count: 3.0,
+                }
+              ),
+            });
+            break;
+          case "WallTrailType":
+            primitive.appearance = new Cesium.MaterialAppearance({
+              material: Cesium.Material.fromType(
+                Cesium.Material.WallTrailType,
+                {
+                  color: new Cesium.Color(1.0, 0.0, 0.0, 0.7),
+                  speed: 3.0
+                }
+              ),
+            });
+            break;
+        }
+      });
+    </script>
+  </body>
+</html>

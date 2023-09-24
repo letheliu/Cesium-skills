@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>效果</title>
+    <script src="libs/Cesium/Cesium.js"></script>
+    <link
+      href="libs/Cesium/Widgets/widgets.css"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cesiumContainer" style="width: 100%; height: 100%"></div>
+    <script src="libs/CesiumPlugin/cesium-plugin.js"></script>
+    <script>
+      const viewer = new CesiumPlugin.Viewer("cesiumContainer");
+      const bloom = new CesiumPlugin.BloomTargetEffect(viewer.scene);
+
+      addMesh();
+      addMouseOver();
+
+      viewer.camera.flyTo({
+        destination: {
+          x: -2473994.447849224,
+          y: 4839441.4421547055,
+          z: 3328342.424308095,
+        },
+        duration: 0,
+        orientation: {
+          heading: 0.03412961843945439,
+          pitch: -Math.PI / 4,
+          roll: 6.2831850130093905,
+        },
+      });
+
+      function addMesh() {
+        const pos = Cesium.Cartesian3.fromDegrees(117.076033, 31.663258, 0.3);
+        const box = new CesiumPlugin.Box({
+          scene: viewer.scene,
+          position: pos,
+          dimensions: new Cesium.Cartesian3(100.0, 100.0, 100.0),
+          color: Cesium.Color.BLUE,
+        });
+
+        const sphere = new CesiumPlugin.Ellipsoid({
+          scene: viewer.scene,
+          position: Cesium.Cartesian3.fromDegrees(117.078423, 31.664305, 30.8),
+          radii: new Cesium.Cartesian3(50.0, 50.0, 50.0),
+          color: Cesium.Color.RED,
+        });
+      }
+
+      function addMouseOver() {
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction((movement) => {
+          const pickedObject = viewer.scene.pick(movement.position);
+          bloom.setTarget(pickedObject);
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+      }
+    </script>
+  </body>
+</html>

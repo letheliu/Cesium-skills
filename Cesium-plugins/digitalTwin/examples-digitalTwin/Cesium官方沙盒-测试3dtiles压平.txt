@@ -1,0 +1,335 @@
+var script = document.createElement('script');
+script.src = 'https://unpkg.com/@turf/turf/turf.min.js';
+document.body.appendChild(script);
+
+    // 获取变换矩阵前两个元素值
+const j = (t, e) => {
+	return console.log("polygon", e),
+		e.map((e => {
+			return Object.values(((t, e) => {
+					let n = Cesium.Matrix4.inverse(Cesium.Transforms.eastNorthUpToFixedFrame(t), new Cesium.Matrix4());
+					return Cesium.Matrix4.multiplyByPoint(n, e, new Cesium.Cartesian3())
+				})(t, Cesium.Cartesian3.fromDegrees.apply(null, e))).splice(0, 2)
+		}))
+}
+      ,U = t=>{
+    return '\n        // ' + t 
+           + '个元素的数组\n        vec2 points_' + t 
+           + "[" + t 
+           + '];\n        bool isPointInPolygon_' + t 
+           + '(vec2 point){\n          int nCross = 0; // 交点数\n          const int n = ' + t 
+           + ";\n          for(int i = 0; i < n; i++){\n            vec2 p1 = points_" + t 
+           + '[i];\n            vec2 p2 = points_' + t 
+           + '[int(mod(float(i+1),float(n)))];\n            if(p1[1] == p2[1]){\n              continue;\n            }\n            if(point[1] < min(p1[1], p2[1])){\n              continue;\n            }\n            if(point[1] >= max(p1[1], p2[1])){\n              continue;\n            }\n            float x = p1[0] + ((point[1] - p1[1]) * (p2[0] - p1[0])) / (p2[1] - p1[1]);\n            if(x > point[0]){\n              nCross++;\n            }\n          }\n          return int(mod(float(nCross), float(2))) == 1;\n        }'
+}
+      , Y = t => {
+            return (t => {
+                return t.filter((function(t, r, n) {
+                    return n.indexOf(t, 0) === r
+                }))
+            })(t.map((t => t.length))).map(U).join("\n")
+        }
+      , X = t => {
+	    return t.map((t => (t => {
+			const r = t.length;
+			return t.map(((t, n) => {
+					return 'points_' + r + "[" + n + '] = vec2(' + t[0] + ", " + t[1] + ");"
+				})).join("\n") + '\n          '+
+         'if(isPointInPolygon_' + r + '(position2D))' +
+        // "(position2D)){\n            vec4 tileset_local_position_transformed = vec4(tileset_local_position.x, tileset_local_position.y, ground_z, 1.0);\n            vec4 model_local_position_transformed = czm_inverseModel * u_tileset_localToWorldMatrix * tileset_local_position_transformed;\n            vsOutput.positionMC.xy = model_local_position_transformed.xy;\n            vsOutput.positionMC.z = -100.0;\n            return;\n          }"
+				"{\n            vec4 tileset_local_position_transformed = vec4(tileset_local_position.x, tileset_local_position.y, ground_z, 1.0);\n            vec4 model_local_position_transformed = czm_inverseModel * u_tileset_localToWorldMatrix * tileset_local_position_transformed;\n            vsOutput.positionMC.xy = model_local_position_transformed.xy;\n            vsOutput.positionMC.z = model_local_position_transformed.z+ modelMC.z*0.002;\n            return;\n          }"
+		})(t.polygon))).join("\n")
+};
+
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  terrain: Cesium.Terrain.fromWorldTerrain(),
+});
+const scene = viewer.scene;
+scene.globe.depthTestAgainstTerrain = false;
+
+let tileset, globalTileset;
+try {
+  // MAXAR OWT Muscatatuk photogrammetry dataset with property textures
+  // containing horizontal and vertical uncertainty
+  tileset = await Cesium.Cesium3DTileset.fromIonAssetId(905848);
+  viewer.scene.primitives.add(tileset);
+  globalTileset = tileset;
+  viewer.zoomTo(tileset);
+} catch (error) {
+  console.log(`Error loading tileset: ${error}`);
+}
+
+const shaders = {
+  NO_TEXTURE: undefined,
+  UNCERTAINTY_CE90: new Cesium.CustomShader({
+    fragmentShaderText: `
+void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+{
+  int horizontalUncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum;
+  material.diffuse = vec3(float(horizontalUncertainty) / 255.0);
+}
+      `,
+  }),
+  UNCERTAINTY_LE90: new Cesium.CustomShader({
+    fragmentShaderText: `
+void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+{
+  int verticalUncertainty = fsInput.metadata.r3dm_uncertainty_le90sum;
+  material.diffuse = vec3(float(verticalUncertainty) / 255.0);
+}
+      `,
+  }),
+  // combined uncertainty
+  UNCERTAINTY: new Cesium.CustomShader({
+    fragmentShaderText: `
+void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+{
+  int uncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum + fsInput.metadata.r3dm_uncertainty_le90sum;
+  material.diffuse = vec3(float(uncertainty) / 255.0);
+}
+      `,
+  }),
+};
+
+Sandcastle.addDefaultToolbarMenu([
+  {
+    text: "No Uncertainty",
+    onselect: function () {
+      tileset.customShader = shaders.NO_TEXTURE;
+    },
+  },
+  {
+    text: "Horizontal Uncertainty",
+    onselect: function () {
+      tileset.customShader = shaders.UNCERTAINTY_CE90;
+    },
+  },
+  {
+    text: "Vertical Uncertainty",
+    onselect: function () {
+      tileset.customShader = shaders.UNCERTAINTY_LE90;
+    },
+  },
+  {
+    text: "Combined Uncertainty",
+    onselect: function () {
+      tileset.customShader = shaders.UNCERTAINTY;
+    },
+  },
+  {
+    text: "绘制压平多边形",
+    onselect: function () {
+      drawPolygon();
+    },
+  },
+]);
+tileset.customShader = shaders.NO_TEXTURE;
+
+//绘制线和面 必要条件 drwaPos 节点经纬度
+  let drawpolygon, drawline, drwaPos = [], yapingpos = [], flatCustomShader;
+  let polygonHierarchy = new Cesium.PolygonHierarchy();
+  let lineEntity = new Cesium.Entity();
+  let polygonEntity = new Cesium.Entity();
+  /**
+   * 笛卡尔转经纬度
+   * @param {*} cartesian 笛卡尔坐标
+   */
+  function transformCartesianToWGS84(cartesian) {
+      //将笛卡尔坐标转化为弧度坐标
+      var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+      //将弧度坐标转换为经纬度坐标（先转弧度再转经纬度简单一点，直接转换的方法也有，不过推荐用这种）
+      var longitude = Cesium.Math.toDegrees(cartographic.longitude); //经度
+      var latitude = Cesium.Math.toDegrees(cartographic.latitude); //纬度
+      var height = cartographic.height; //高度
+      return { lng: longitude, lat: latitude, h: height };
+  }
+  //绘制线的回调事件
+  function createLine() {
+      drawline = lineEntity.polyline = {
+          positions: new Cesium.CallbackProperty(() => {
+              return Cesium.Cartesian3.fromDegreesArray(drwaPos);
+          }, false),
+          width: 100,
+          material: new Cesium.PolylineGlowMaterialProperty({ //设置Glow材质
+              //泛光强度
+              glowPower: 0.02,
+              //泛光颜色
+              color: Cesium.Color.fromCssColorString('#00CED1').withAlpha(0.5)
+          }),
+          clampToGround: true
+      };
+      viewer.entities.add(lineEntity);
+  }
+  //绘制面的回调事件
+  function creatPolygon() {
+      drawpolygon = polygonEntity.polygon = {
+          hierarchy: new Cesium.CallbackProperty(() => {
+              return polygonHierarchy;
+          }, false),
+          material: Cesium.Color.fromCssColorString('#000000').withAlpha(0.3),
+          clampToGround: true,
+          outline: false,
+          outlineColor: Cesium.Color.fromCssColorString('#00FA9A').withAlpha(0.8)//黑色轮廓线
+      };
+      viewer.entities.add(polygonEntity);
+  }
+  //结束绘制
+  function endDraw() {
+      handlerDraw.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+      handlerDraw.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+      handlerDraw.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+      //初始化划线
+      drawline = null;
+      drawpolygon = null;
+  }
+  /**
+   * 经纬度串转geojson
+   * @param {*} drwaPos  经纬度串
+   */
+  function positionTogeojson(drwaPos, type) {
+      let boxArry = [], buffered;
+      if (type === 'line') {
+          for (let i = 0; i < drwaPos.length; i++) {
+              boxArry.push([drwaPos[i], drwaPos[i + 1]]);
+              i++;
+          }
+          buffered = turf.lineString(boxArry);
+      } else {
+          for (let i = 0; i < drwaPos.length; i++) {
+              boxArry.push([drwaPos[i], drwaPos[i + 1]]);
+              i++;
+          }
+          buffered = turf.polygon([boxArry]);
+      }
+      return buffered;
+  }
+
+  var handlerDraw = null;
+
+  function drawPolygon()
+  {
+    handlerDraw = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas); //绘制图形
+        /**
+         * 场景划面事件
+         * @param {*} type 分析类型
+         */
+        drawPolygonQuery('压平分析');
+        function drawPolygonQuery(type) {
+            drwaPos = [];
+          yapingpos = [];
+            polygonHierarchy = new Cesium.PolygonHierarchy();
+            handlerDraw.setInputAction((e) => {
+                var position = viewer.scene.pickPosition(e.position);
+                var cartesian = transformCartesianToWGS84(position);
+                //添加线和面的数组
+                if (drwaPos.length == 0) {
+                    drwaPos.push(cartesian.lng, cartesian.lat);
+                    yapingpos.push([cartesian.lng, cartesian.lat, cartesian.h]);
+                    polygonHierarchy.positions.push(position.clone());
+                }
+                drwaPos.push(cartesian.lng, cartesian.lat);
+                polygonHierarchy.positions.push(position.clone());
+                yapingpos.push([cartesian.lng, cartesian.lat, cartesian.h]);
+                if (!drawline) createLine();
+                if (!drawpolygon) creatPolygon();
+            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+            handlerDraw.setInputAction((movement) => {
+                var position = viewer.scene.pickPosition(movement.endPosition);
+                if (position) {
+                    var cartesian = transformCartesianToWGS84(position);
+                    if (drwaPos.length >= 4) {
+                        drwaPos.pop();
+                        drwaPos.pop();
+                        drwaPos.push(cartesian.lng, cartesian.lat);
+
+                        yapingpos.pop();
+                        yapingpos.push([cartesian.lng, cartesian.lat, cartesian.h]);
+                    }
+                    //如果大于3个点则组成数组
+                    if (drwaPos.length >= 4) {
+                        polygonHierarchy.positions.pop();
+                        polygonHierarchy.positions.push(position);
+                    }
+                }
+            }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+            handlerDraw.setInputAction((e) => {
+                var position = viewer.scene.pickPosition(e.position);
+                if (position) {
+                    //形成闭环 吧第一个数组也加进来
+                    drwaPos.push(drwaPos[0], drwaPos[1]);
+                    yapingpos.push(yapingpos[0]);
+                    if (polygonHierarchy.positions.length <= 3) {
+                        endDraw();
+                        showMsg('请绘制3个以上的点');
+                        return;
+                    } else {
+                        endDraw();
+                        //执行查询功能
+                        if (type === '压平分析') {
+                            let polygon = yapingpos;
+                            let geometry = positionTogeojson(drwaPos, 'polygon');
+                            var center = turf.center(geometry);
+                            let lng = center.geometry.coordinates[0];
+                            let lat = center.geometry.coordinates[1];
+                            var polyCenter = Cesium.Cartesian3.fromDegrees(lng, lat, 0);
+                            var ellipsoid = viewer.scene.globe.ellipsoid;
+                            let cartographic = viewer.scene.globe.ellipsoid.cartesianToCartographic(polyCenter);
+                            var height = viewer.scene.sampleHeight(cartographic);
+                            console.log(height);
+                            //开始压平
+                            let eJJG = [
+                              {
+                                polygon,
+                                flatHeight: -100,
+                              },
+                            ];
+
+                            let vsText = '\n        // 所有isPointInPolygon函数\n        ' + Y(eJJG.map((e=>{
+                                                        return j(globalTileset.boundingSphere.center, e.polygon)
+                                                    }))) + '\n        void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput){\n            vec3 modelMC = vsInput.attributes.positionMC;\n            vec4 model_local_position = vec4(modelMC.x, modelMC.y, modelMC.z, 1.0);\n            vec4 tileset_local_position = u_tileset_worldToLocalMatrix * czm_model * model_local_position;\n            vec2 position2D = vec2(tileset_local_position.x,tileset_local_position.y);\n            float ground_z = 0.0 + u_flatHeight;\n            // 多个多边形区域\n            ' 
+                                                    + X(eJJG.map((e=>{
+                                                        return {
+                                                            polygon: j(globalTileset.boundingSphere.center, e.polygon)
+                                                    }}))) + "\n        }";
+                            var n = globalTileset.boundingSphere.center;
+                            var i = Cesium.Transforms.eastNorthUpToFixedFrame(n);
+                            let flatCustomShader = new Cesium.CustomShader({
+                              uniforms: {
+                                u_tileset_localToWorldMatrix: {
+                                  type: Cesium.UniformType.MAT4,
+                                  value: i
+                                },
+                                u_tileset_worldToLocalMatrix: {
+                                  type: Cesium.UniformType.MAT4,
+                                  value: Cesium.Matrix4.inverse(i, new Cesium.Matrix4())
+                                },
+                                u_flatHeight: {
+                                  type: Cesium.UniformType.FLOAT,
+                                  value: eJJG[0].flatHeight
+                                }
+                              },
+                              vertexShaderText: vsText,
+                            });
+                            globalTileset.customShader = flatCustomShader;
+                            viewer.entities.removeAll();
+                          /*
+                            globalTileset.customShader = new Cesium.CustomShader({
+                              lightingModel: Cesium.LightingModel.UNLIT,
+                              fragmentShaderText: `
+                                // Color tiles by distance to the camera
+                                void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+                                {
+                                    material.diffuse = vec3(0.0, 0.0, 1.0);
+                                    material.diffuse.g = -fsInput.attributes.positionEC.z / 1.0e4;
+                                }
+                                `,
+                            });*/
+                        }
+                    }
+                }
+            }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+        }
+  }
+

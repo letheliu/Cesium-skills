@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>效果</title>
+    <script src="libs/dat.gui.min.js"></script>
+    <script src="libs/Cesium/Cesium.js"></script>
+    <link href="libs/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cesiumContainer" style="width: 100%; height: 100%"></div>
+    <script src="libs/CesiumPlugin/cesium-plugin.js"></script>
+    <script>
+      const viewer = new CesiumPlugin.Viewer("cesiumContainer");
+      let cylinderGeometry = new Cesium.CylinderGeometry({
+        length: 400000.0,
+        topRadius: 200000.0,
+        bottomRadius: 200000.0,
+      });
+      let modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+        Cesium.Transforms.eastNorthUpToFixedFrame(
+          Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883)
+        ),
+        new Cesium.Cartesian3(0.0, 0.0, 200000.0),
+        new Cesium.Matrix4()
+      );
+      const primitive = viewer.scene.primitives.add(
+        new Cesium.Primitive({
+          geometryInstances: new Cesium.GeometryInstance({
+            geometry: cylinderGeometry,
+            modelMatrix: modelMatrix,
+          }),
+          appearance: new Cesium.MaterialAppearance({
+            material: Cesium.Material.fromType(
+              Cesium.Material.CylinderFadeType,
+              {
+                color: new Cesium.Color(1.0, 0.0, 0.0, 0.7),
+              }
+            ),
+          }),
+        })
+      );
+
+      let cylinderMaterial = { type: "CylinderFadeType" };
+      const gui = new dat.GUI();
+      const f = gui.addFolder("材质类型");
+      f.add(cylinderMaterial, "type", [
+        "CylinderFadeType",
+        "CylinderScanType",
+      ]).onChange((value) => {
+        switch (value) {
+          case "CylinderFadeType":
+            primitive.appearance = new Cesium.MaterialAppearance({
+              material: Cesium.Material.fromType(
+                Cesium.Material.CylinderFadeType,
+                {
+                  color: new Cesium.Color(1.0, 0.0, 0.0, 0.7),
+                }
+              ),
+            });
+            break;
+          case "CylinderScanType":
+            primitive.appearance = new Cesium.MaterialAppearance({
+              material: Cesium.Material.fromType(
+                Cesium.Material.CylinderScanType,
+                {
+                  color: new Cesium.Color(1.0, 0.0, 0.0, 0.5),
+                  speed: 1,
+                  repeat: new Cesium.Cartesian2(1, 1),
+                }
+              ),
+            });
+            break;
+        }
+      });
+      //   viewer.camera.flyToBoundingSphere(cylinderGeometry.boundingSphere);
+    </script>
+  </body>
+</html>

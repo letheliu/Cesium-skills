@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>效果</title>
+    <script src="libs/dat.gui.min.js"></script>
+    <script src="libs/Cesium/Cesium.js"></script>
+    <link href="libs/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cesiumContainer" style="width: 100%; height: 100%"></div>
+    <script src="libs/CesiumPlugin/cesium-plugin.js"></script>
+    <script>
+      const viewer = new CesiumPlugin.Viewer("cesiumContainer");
+      const plotting = new CesiumPlugin.Plot(viewer);
+
+      const color = "rgba(255, 0, 0, 0.8)";
+
+      let plotFunc = { type: "选择类型" };
+      const gui = new dat.GUI();
+      const f = gui.addFolder("标绘类型");
+      f.add(plotFunc, "type", [
+        "选择类型",
+        "自由线",
+        "折线",
+        "圆滑曲线",
+        "自由面",
+        "多边形",
+        "正多边形",
+        "简单直线箭头",
+        "简单曲线箭头",
+        "燕尾箭头",
+        "直角箭头",
+        "钳击箭头",
+        "进攻箭头",
+        "圆角矩形",
+        "扇形",
+        "弓形",
+        "集结地",
+        "曲线旗标",
+        "矩形旗标",
+        "正三角旗标",
+        "倒三角旗标",
+        "对三角旗标",
+        "清空"
+      ]).onChange((value) => {
+        switch (value) {
+          case "自由线":
+            plotting.CreateFreeLine(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+                width: 5,
+              },
+              function (el) {
+                console.log("在这里执行自由线绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "折线":
+            plotting.CreatePolyline(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+                width: 5,
+              },
+              function (el) {
+                console.log("在这里执行折线绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "圆滑曲线":
+            plotting.CreateCurve(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+                width: 5,
+              },
+              function (el) {
+                console.log("在这里执行圆滑曲线绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "自由面":
+            plotting.CreateFreePolygon(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+              },
+              function (el) {
+                console.log("在这里执行自由面绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "多边形":
+            plotting.CreatePolygon(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+              },
+              function (el) {
+                console.log("在这里执行多边形绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "正多边形":
+            plotting.CreateRegularPolygon(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+                num: 6,
+              },
+              function (el) {
+                console.log("在这里执行正多边形绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "简单直线箭头":
+            plotting.CreateLineArrow(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+                width: 15,
+                straight: true,
+              },
+              function (el) {
+                console.log("在这里执行简单直线箭头创建后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "简单曲线箭头":
+            plotting.CreateLineArrow(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+                width: 15,
+                straight: false,
+              },
+              function (el) {
+                console.log("在这里执行简单曲线箭头创建后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "燕尾箭头":
+            plotting.CreateSwallowtailArrow(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+              },
+              function (el) {
+                console.log("在这里执行燕尾箭头绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "直角箭头":
+            plotting.CreateRightAngleArrow(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+              },
+              function (el) {
+                console.log("在这里执行直角箭头绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "圆角矩形":
+            plotting.CreateRoundRectangle(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+              },
+              function (el) {
+                console.log("在这里执行圆角矩形绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "扇形":
+            plotting.CreateSector(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+              },
+              function (el) {
+                console.log("在这里执行扇形绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "弓形":
+            plotting.CreateBow(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+              },
+              function (el) {
+                console.log("在这里执行弓形绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "钳击箭头":
+            plotting.CreatePincerArrow(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+              },
+              function (el) {
+                console.log("在这里执行钳击箭头绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "进攻箭头":
+            plotting.CreateAttackArrow(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+              },
+              function (el) {
+                console.log("在这里执行进攻箭头绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "集结地":
+            plotting.CreateStagingArea(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+              },
+              function (el) {
+                console.log("在这里执行集结地绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "曲线旗标":
+            plotting.CreateFlag(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+                type: 0,
+              },
+              function (el) {
+                console.log("在这里执行曲线旗标绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "矩形旗标":
+            plotting.CreateFlag(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+                type: 1,
+              },
+              function (el) {
+                console.log("在这里执行矩形旗标绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "正三角旗标":
+            plotting.CreateFlag(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+                type: 2,
+              },
+              function (el) {
+                console.log("在这里执行正三角旗标绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "倒三角旗标":
+            plotting.CreateFlag(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+                type: 3,
+              },
+              function (el) {
+                console.log("在这里执行倒三角旗标绘制后回调方法", el, plotting);
+              }
+            );
+            break;
+          case "对三角旗标":
+            plotting.CreateFlag(
+              {
+                color: Cesium.Color.fromCssColorString(color),
+                id: CesiumPlugin.Util.uuid(),
+                type: 4,
+              },
+              function (el) {
+                console.log("对三角旗标", el, plotting);
+              }
+            );
+            break;
+          case "清空":
+            plotting.clearAll();
+            break;
+        }
+      });
+    </script>
+  </body>
+</html>

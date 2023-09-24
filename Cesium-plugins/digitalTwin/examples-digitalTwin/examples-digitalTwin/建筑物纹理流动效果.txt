@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>效果</title>
+    <script src="libs/Cesium/Cesium.js"></script>
+    <link
+      href="libs/Cesium/Widgets/widgets.css"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cesiumContainer" style="width: 100%; height: 100%"></div>
+    <script src="libs/CesiumPlugin/cesium-plugin.js"></script>
+    <script>
+      const viewer = new CesiumPlugin.Viewer("cesiumContainer");
+      const initialPosition = Cesium.Cartesian3.fromDegrees(
+        -74.01881302800248,
+        40.69114333714821,
+        753
+      );
+      const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+        21.27879878293835,
+        -21.34390550872461,
+        0.0716951918898415
+      );
+      viewer.scene.camera.setView({
+        destination: initialPosition,
+        orientation: initialOrientation,
+        endTransform: Cesium.Matrix4.IDENTITY,
+      });
+      const tileset = new Cesium.Cesium3DTileset({
+        url: Cesium.IonResource.fromAssetId(96188),
+        customShader: CesiumPlugin.BuildingTextureFlowShader
+      });
+      tileset.readyPromise.then((tileset) => {
+        const [maxheight, minheight] = [
+          tileset.properties['cesium#estimatedHeight'].maximum,
+          tileset.properties['cesium#estimatedHeight'].minimum,
+        ];
+        tileset.customShader.setUniform("maxHeight", maxheight);
+        tileset.customShader.setUniform("minHeight", minheight);
+
+        viewer.scene.primitives.add(tileset);
+      });
+    </script>
+  </body>
+</html>

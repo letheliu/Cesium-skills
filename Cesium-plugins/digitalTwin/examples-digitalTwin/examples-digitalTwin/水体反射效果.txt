@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>效果</title>
+    <script src="libs/Cesium/Cesium.js"></script>
+    <link href="libs/Cesium/Widgets/widgets.css" rel="stylesheet" />
+    <script src="libs/dat.gui.min.js"></script>
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="cesiumContainer" style="width: 100%; height: 100%"></div>
+    <script src="libs/CesiumPlugin/cesium-plugin.js"></script>
+    <script>
+        const viewer = new CesiumPlugin.Viewer("cesiumContainer", {
+            // terrainProvider: Cesium.createWorldTerrain(),
+        });
+
+        const tileset = new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(69380),
+        });
+
+        viewer.scene.primitives.add(tileset);
+        viewer.zoomTo(tileset);
+
+        const positions = [
+            Cesium.Cartographic.fromDegrees(144.959871, -37.834551, 10),
+            Cesium.Cartographic.fromDegrees(144.989984, -37.777394, 10),
+            Cesium.Cartographic.fromDegrees(144.896752, -37.786167, 10),
+            Cesium.Cartographic.fromDegrees(144.891453, -37.837318, 10),
+            Cesium.Cartographic.fromDegrees(144.959871, -37.834551, 10),
+        ];
+        const water = new CesiumPlugin.Water({
+            scene: viewer.scene,
+            positions: positions,
+            height: 10,
+            rippleSize: 100,
+        });
+
+        const gui = new dat.GUI();
+        const waterParams = {
+            波纹大小: 50.0,
+            透明度: 0.9,
+            反射率: 0.3,
+            扭曲: 3.7,
+            高度: 10,
+        };
+        function waterParamsUpdate() {
+            water.rippleSize = waterParams["波纹大小"];
+            water.waterAlpha = waterParams["透明度"];
+            water.reflectivity = waterParams["反射率"];
+            water.distortionScale = waterParams["扭曲"];
+            water.height = waterParams["高度"];
+        }
+        gui.add(waterParams, "波纹大小").min(0).max(300).onChange(waterParamsUpdate);
+        gui.add(waterParams, "透明度").min(0).max(1).onChange(waterParamsUpdate);
+        gui.add(waterParams, "反射率").min(0).max(1).onChange(waterParamsUpdate);
+        gui.add(waterParams, "扭曲").min(0).max(8).onChange(waterParamsUpdate);
+        gui.add(waterParams, "高度").min(70).max(100).onChange(waterParamsUpdate);
+    </script>
+</body>
+
+</html>
