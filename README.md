@@ -80,9 +80,18 @@ This repository can help us to learn all kinds of examples、codes and plugins a
     <td>https://vue-cesium.songluck.com/#/zh-CN 或 https://zouyaoji.top/vue-cesium/#/zh-CN</td>
     <td>https://github.com/zouyaoji/vue-cesium</td>
   </tr>
+
+  <tr>
+    <td>9</td>
+    <td>DigitalTwin</td>
+    <td><img src="./Cesium-plugins\logo-d69b5473.png"></td>
+    <td>数字孪生平台（个人）</td>
+    <td>http://8.130.10.148:3000/digitaltwin/index.html#/home/index</td>
+    <td>---</td>
+  </tr>
 </table>
 
-## 三、Cesium相关的技术博客-含代码介绍（2023.8.5）
+## 三、Cesium相关的技术博客-含代码介绍（2023.9.24）
 (1) [总要学点什么](https://wangjianlei.blog.csdn.net/article/details/125266858)
 
 (2) [右弦GISer](https://blog.csdn.net/weixin_45782925/article/details/123269490#comments_24482075)
@@ -90,6 +99,10 @@ This repository can help us to learn all kinds of examples、codes and plugins a
 (3) [A-Zero](http://blog.1ge0.com/gis/cesium/01.html#%E5%B9%B3%E5%8F%B0%E4%BB%8B%E7%BB%8D)
 
 (4）[xietao20](https://blog.csdn.net/xietao20?type=blog)
+
+(5）[weixin_40902527](https://blog.csdn.net/weixin_40902527/)
+
+(6）[u013929284](https://blog.csdn.net/u013929284)
 
 ## 四、Cesium插件js下载地址
 1、[SuperMap-Cesium插件](http://support.supermap.com.cn:8090/webgl/Build/Cesium/Cesium.js)对应代码为混淆后的js文件，如果想要查看源码，可通过浏览器的控制台添加断点调试，在`eval()`函数调用之前打印字符串内容并复制，即为源码版的js，之后利用[在线js格式化工具](https://www.wetools.com/js-formatter)进行格式美化即可阅读，等同于只要想学习，完全可以看到源码哦！！！🌈🌈🌈
@@ -129,4 +142,9 @@ This repository can help us to learn all kinds of examples、codes and plugins a
 <img src="./get-Vue_Cesium.png">
 <center><strong>浏览器控制台查看 Vue-Cesium 代码格式化</center>
 
-- Note: ```The primary goal of repository is just to learn Cesium official API and invoked codes, hope this can help some developers, only for personal study and research Cesium source codes to use and communicate, no permission for commercial purposes and values !!!```
+9、[DigitalTwin](http://8.130.10.148:3000/public/developer/cesium/libs/CesiumPlugin/cesium-plugin.js)
+<img src="./get-digitaltwin.png">
+<center><strong>浏览器控制台查看 DigitalTwin插件 代码格式化</center>
+
+
+- Note: ```The primary goal of repository is just to learn Cesium official API and invoked codes, hope this can help some developers, only for personal study and research Cesium source codes to use and communicate, above websites and plugins can help developers to explore powerful potential function from Cesium framework! Attentions: no permission for commercial profitable purposes and values !!!```
